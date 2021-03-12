@@ -47,6 +47,12 @@ La plupart des cellules de code s'exécutent rapidement (les données étant dé
 
 Les notions abordées rapidement lors de ces TPs sont complétées par des liens (dans les cellules concernées) dirigeant vers des ressources complémentaires. D'autres ressources sont également systématiquement présentes en fin de notebook.
 
+## Visualisation simple des notebook (sans code)
+
+Vous pouvez également consulter les notebooks en allant sur le site : https://nbviewer.jupyter.org/
+Puis, dans la barre de recherche, entrez le lien vers le notebook d'intérêt de ce GitHub, par exemple https://github.com/afiliot/TPDUIA/blob/main/TPDUIA/image_tp1.ipynb
+Celui-ci devrait s'afficher de manière plus lisible. Vous pouvez aussi (lien temporaire) aller directement ici : https://nbviewer.jupyter.org/github/afiliot/TPDUIA/blob/main/TPDUIA/image_tp1.ipynb
+
 ## Contact
 
 N'hésitez-pas à m'envoyer un mail avec vos questions (aussi bien techniques que pratiques) à : alexandre.filiot@chru-lille.fr
