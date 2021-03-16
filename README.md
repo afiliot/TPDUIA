@@ -51,7 +51,12 @@ Les notions abordées rapidement lors de ces TPs sont complétées par des liens
 
 Vous pouvez également consulter les notebooks en allant sur le site : https://nbviewer.jupyter.org/
 Puis, dans la barre de recherche, entrez le lien vers le notebook d'intérêt de ce GitHub, par exemple https://github.com/afiliot/TPDUIA/blob/main/TPDUIA/image_tp1.ipynb
-Celui-ci devrait s'afficher de manière plus lisible. Vous pouvez aussi (lien temporaire) aller directement ici : https://nbviewer.jupyter.org/github/afiliot/TPDUIA/blob/main/TPDUIA/image_tp1.ipynb
+Celui-ci devrait s'afficher de manière plus lisible. Vous pouvez aussi (lien temporaire) aller directement ici : 
+- `image_tp1.ipynb` : https://nbviewer.jupyter.org/github/afiliot/TPDUIA/blob/main/TPDUIA/image_tp1.ipynb
+- `augmentation_tp2.ipynb` : https://nbviewer.jupyter.org/github/afiliot/TPDUIA/blob/main/TPDUIA/augmentation_tp2.ipynb
+- `convolution_tp3.ipynb` : https://nbviewer.jupyter.org/github/afiliot/TPDUIA/blob/main/TPDUIA/convolution_tp3.ipynb
+- `covid_tp4.ipynb` : https://nbviewer.jupyter.org/github/afiliot/TPDUIA/blob/main/TPDUIA/covid_tp4.ipynb
+
 
 ## Organisation des notebook
 
