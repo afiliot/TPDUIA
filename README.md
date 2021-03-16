@@ -1,4 +1,4 @@
-# DU Intelligence Artificielle et Santé : Travaux Pratiques [Séminaire 4 - Traitement de l'image] :computer:
+# DU Intelligence Artificielle et Santé : Travaux Pratiques [Séminaire 4 - Traitement de l'image]
 
 ## Mise en place
 ### Synchronisation du drive `data` avec votre Drive
@@ -52,6 +52,14 @@ Les notions abordées rapidement lors de ces TPs sont complétées par des liens
 Vous pouvez également consulter les notebooks en allant sur le site : https://nbviewer.jupyter.org/
 Puis, dans la barre de recherche, entrez le lien vers le notebook d'intérêt de ce GitHub, par exemple https://github.com/afiliot/TPDUIA/blob/main/TPDUIA/image_tp1.ipynb
 Celui-ci devrait s'afficher de manière plus lisible. Vous pouvez aussi (lien temporaire) aller directement ici : https://nbviewer.jupyter.org/github/afiliot/TPDUIA/blob/main/TPDUIA/image_tp1.ipynb
+
+## Organisation des notebook
+
+Les notebook abordés dans le cadre de ce séminaire sont au nombre de quatre, dans l'ordre de présentation : `image_tp1.ipynb`, `augmentation_tp2.ipynb`, `convolution_tp3.ipynb` et `covid_tp4.ipynb`. Le contenu de chacun de ces notebook est détaillé ci-dessous:
+- `image_tp1.ipynb` : introduction sur la notion d'image numérique - fondements physique et biologique sous-jacents, codage de l'information, représentation en Python (RVB, binaire, noir et blanc), manipulations sur les images, transformations usuelles, notion d'interpolation et de résolution.
+- `augmentation_tp2.ipynb` : examples de _pipeline_ d'augmentation de données histologiques (https://doi.org/10.1038/srep27988) en TensorFlow 2.0. Test de différentes fonction d'augmentation, comparaison de l'usage de ces techniques (ou non) sur une tâche de classification de tissus.
+- `convolution_tp3.ipynb` : retour sur la notion de convolution - historique de l'apprentissage profond depuis l'introduction du neurone formel, perceptron, intuitions physique et biologique de la convolution, visualisations et description de différentes opérations à l'oeuvre dans les réseaux convolutifs (pooling, convolution, couches denses, etc.). Cas d'application sur les données MNIST. 
+- `covid_tp4.ipynb` : classification diagnostic de la présence d'infection pulmonaire virale SARS-CoV-2 sur données de scanner (volumiques en 3D) - chargement des données, preprocessing, augmentation, entraînement et prédiction (TensorFlow 2.0).
 
 ## Contact
 
