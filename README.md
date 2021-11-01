@@ -66,10 +66,4 @@ Les notebook abordés dans le cadre de ce séminaire sont au nombre de quatre, d
 - `convolution_tp3.ipynb` : retour sur la notion de convolution - historique de l'apprentissage profond depuis l'introduction du neurone formel, perceptron, intuitions physique et biologique de la convolution, visualisations et description de différentes opérations à l'oeuvre dans les réseaux convolutifs (pooling, convolution, couches denses, etc.). Cas d'application sur les données MNIST. 
 - `covid_tp4.ipynb` : classification diagnostic de la présence d'infection pulmonaire virale SARS-CoV-2 sur données de scanner (volumiques en 3D) - chargement des données, preprocessing, augmentation, entraînement et prédiction (TensorFlow 2.0).
 
-## Contact
-
-N'hésitez-pas à m'envoyer un mail avec vos questions (aussi bien techniques que pratiques) à : alexandre.filiot@chru-lille.fr
-
-
-
 
