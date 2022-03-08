@@ -35,6 +35,9 @@ from IPython.display import Image, display
 from p_tqdm import p_map
 from tqdm import tqdm
 
+# deep learning
+import tensorflow as tf
+
 warnings.filterwarnings('ignore')
 
 def launch_server(wsi_path):
@@ -468,7 +471,8 @@ from PIL.Image import BILINEAR
 def ij_tiling(
         dz: DZG,
         coords: Tuple[int],
-        plot: bool = False
+        plot: bool = False,
+        save: bool = False
 ) -> Union[None, Tuple[np.ndarray, str]]:
     """Lit et stocke les patches de la lame selon des
     coordonnées (i, j) spécifiées en paramètres `coords` si
@@ -496,18 +500,19 @@ def ij_tiling(
             )
         else:
             tile_0_ij = copy(tile_0_ij_)
-        # stockage du patch avec les informations utiles dans le
         # nom de fichier
         tile_path = 'tilesize%d_i%d_j%d_w%d_h%d_dw%d_dh%d_overlap%f_pbg%f' % (
-            tuple([dz.tile_size, i, j] + region_0 + [dz.overlap, bgp])
-        )
-        tile_path = os.path.join(dz.output_folder, tile_path + '.png')
-        tile_0_ij.save(tile_path)
-        # conversion de l'image en matrice numpy
-        tile_0_ij = np.array(tile_0_ij)
+                tuple([dz.tile_size, i, j] + region_0 + [dz.overlap, bgp])
+            )
+        if save:
+            # stockage du patch avec les informations utiles dans le
+            # nom de fichier
+            tile_path = os.path.join(dz.output_folder, tile_path + '.png')
+            tile_0_ij.save(tile_path)
         # rendu graphique si plot = True
         if plot:
-            # on convertit le patch avant redimensionnement
+            # conversion de l'image en matrice numpy
+            tile_0_ij = np.array(tile_0_ij)
             tile_0_ij_ = np.array(tile_0_ij_)
             # on créée la figure et les axes
             fig, axes = plt.subplots(nrows=1, ncols=5, figsize=(17, 3))
@@ -639,3 +644,177 @@ def render_hed(patch_path, figsize: Tuple[int] = (11, 3)) -> None:
         a.axis('off')
     fig.tight_layout()
     plt.show()
+
+    
+def store_data(ds: tf.data.Dataset, add_label: bool = True) -> List[np.ndarray]:
+    """Visualisation des images à partir d'un objet tf.data.Dataset."""
+    filenames, images, labels = [], [], []
+    # on itère sur le dataset avec une boucle for
+    for element in tqdm(ds):
+        filename, image = element['filename'].numpy()[0].decode(), element['image'].numpy()[0]
+        if add_label:
+            label = element['label'].numpy()[0]
+        else:
+            label = None
+        filenames.append(filename)
+        images.append(image)
+        labels.append(label)
+    return np.array(filenames), np.array(images), np.array(labels)
+
+def get_labels_distribution(labels: np.ndarray) -> pd.DataFrame:
+    """Calcul des effectifs et proportions dans chaque classe."""
+    distributions = pd.DataFrame(
+        np.unique(labels, return_counts=True),
+        index = {'Class index', 'N'}
+    ).T
+    distributions['p%'] = (
+        distributions['N'] / distributions['N'].sum()
+    ).round(3) * 100
+    distributions['p%'] = distributions['p%'].astype(str).apply(lambda x: x[:4]+'%')
+    distributions['Class index'] = distributions['Class index'].astype(int)
+    distributions.loc['overall', :] = ['-', distributions['N'].sum(), '100.0%']
+    distributions.columns = ['Class index', 'N', 'p%']
+    distributions['N'] = distributions['N'].astype(int)
+    return distributions
+
+def get_train_val_test_labels_distributions(labels: List[np.ndarray]) -> pd.DataFrame:
+    """Mêmes calculs que la fonction précédente mais sur les 3 jeux de labels."""
+    labels_train, labels_val, labels_test = labels
+    # on assemble les 3 tableaux
+    distributions = get_labels_distribution(labels_train).merge(
+        get_labels_distribution(labels_val), on='Class index', suffixes=['_train', '_val']
+    ).merge(
+        get_labels_distribution(labels_test), on='Class index', suffixes=['_test', '_test']
+    )
+    distributions.columns = list(distributions.columns[:-2]) + list(['N_test', 'p%_test'])
+    distributions.index = [
+        'tumour epithelium', 'simple stroma',
+        'complex stroma', 'immune cell conglomerate',
+        'debris and mucus', 'mucosal glands',
+        'adipose tissue', 'background', 'overall'
+    ]
+    return distributions
+
+classes_dict = {
+    0: 'tumour epithelium', 1: 'simple stroma',
+    2: 'complex stroma', 3: 'immune cell conglomerate',
+    4: 'debris and mucus', 5: 'mucosal glands',
+    6: 'adipose tissue', 7: 'background'
+}
+
+def plot_images(images: np.ndarray, labels: np.ndarray) -> None:
+    """Affiche 12 images par classes de tissus."""
+    fig, axes = plt.subplots(8, 12, figsize=(17, 12))
+    for label in range(9):
+        images_ = images[
+                np.where(labels==label)[0]
+        ][:12]
+        for i, img in enumerate(images_):
+            ax = axes[label, i]
+            ax.imshow(img);ax.axis('off')
+            if i == 0:
+                ax.set_title(f'Classe {label}: {classes_dict[label]}')
+    plt.subplots_adjust(wspace=-0.5, hspace=0.35)
+    plt.show()
+    
+def plot_large_image(image: np.ndarray, filename: str) -> None:
+    """Affiche toutes les images larges (n=10)."""
+    fig, ax = plt.subplots(1, 1, figsize=(20, 20))
+    ax.imshow(image)
+    ax.set_title(f'Image {filename}')
+    plt.show()
+
+def show_augment(
+    images: np.ndarray,
+    labels: np.ndarray,
+    pipeline: tf.keras.Sequential = None
+) -> None:
+    """Affiche quelques images avant et après augmentation
+    selon une pipeline d'entrée (définie par certaines opérations)/"""
+    if pipeline is None:
+        pipeline = geom_augmentation_pipeline
+    fig, axes = plt.subplots(2, 12, figsize=(14, 4))
+    for i in range(12):
+        # avant augmentation
+        ax = axes[0, i]
+        im = images[i]
+        ax.imshow(im)
+        ax.axis('off')
+        ax.set_title(f'Classe {labels[i]}')
+        # après augmentation
+        ax = axes[1, i]
+        im = np.expand_dims(images[i], 0)
+        ax.imshow(pipeline(im)[0, ...])
+        ax.axis('off')
+        ax.set_title(f'Classe {labels[i]}')
+    fig.show()
+    
+def plot_history(history: pd.DataFrame) -> None:
+    """Affiche l'évolution de l'accuracy (taux de précision)
+    et de la fonction de coût (ou loss) en fonction du nombre
+    d'epochs et selon l'échantillon de données."""
+    # on initialise la figure
+    fig, axes = plt.subplots(1, 2, figsize=(15, 3))
+    # on affiche d'abord le taux de réussite
+    ax = history[['Training accuracy', 'Validation accuracy']].plot(
+        ax=axes[0],
+        color=['blue', 'red'],
+        style=['--', '-o'],
+    )
+    ax.grid('on')
+    ax.set_xlabel('Epochs')
+    ax.set_ylabel('Accuracy')
+    ax.set_title('Accuracy on training and validation data sets')
+    # puis la fonction de coût
+    ax = history[['Training loss', 'Validation loss']].plot(
+        ax=axes[1],
+        color=['blue', 'red'],
+        style=['--', '-o'],
+    )
+    ax.grid('on')
+    ax.set_xlabel('Epochs')
+    ax.set_ylabel('Loss (Log scale)')
+    ax.set_yscale('log')
+    ax.set_title('Loss on training and validation data sets')
+    plt.show()
+    
+def get_predictions_table(
+    model: tf.keras.models.Model,
+    images: np.ndarray,
+    labels: np.ndarray,
+    filenames: np.ndarray,
+    add_img_coords: bool = True
+) -> pd.DataFrame:
+    """Retourne un data frame pandas avec, pour chaque image: les probabilités associées
+    aux classes prédites, la classe prédite (maximum des probabilités) et le chemin vers
+    l'image."""
+    predicted_probas = model.predict_proba(images, verbose=1)
+    predicted_classes = model.predict_classes(images, verbose=1)
+    # on construit une table avec les probabilités et les classes prédites
+    # par l'algorithme sur l'échantillon de test
+    predictions = pd.DataFrame(predicted_probas, predicted_classes)
+    predictions.columns = [f'probability class {i}' for i in range(8)]
+    predictions['predicted class'] = predictions.index
+    predictions = predictions.reset_index(drop=True)
+    predictions['true class'] = labels
+    predictions['filename'] = filenames
+    if add_img_coords:
+        predictions['large_filename'] = predictions['filename'].apply(
+            lambda x: x.split('.tif')[0].split('_')[1]+'.tif'
+        )
+        predictions['col'] = predictions['filename'].apply(
+            lambda x: x.split('_Col_')[1].split('.tif')[0]
+        ).astype(int).values
+
+        predictions['row'] = predictions['filename'].apply(
+            lambda x: x.split('.tif_Row_')[1].split('_')[0]
+        ).astype(int).values
+    return predictions
+
+def get_accuracies(matrix: pd.DataFrame) -> None:
+    """Affiche les taux de réussite par classes."""
+    for true_class in range(0, 8):
+        col = matrix.iloc[:, true_class].values
+        true  = col[true_class]
+        false = col[[t for t in range(0, 8) if t != true_class]].sum()
+        print(f'Class {classes_dict[true_class]}: {(100*true/(true+false)):.1f}%')
