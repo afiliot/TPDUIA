@@ -5,7 +5,7 @@
 
 Avant de reprendre les procédures à réaliser pour lire chaque notebook, vous devez réaliser les choses suivantes : 
 
-1) Ouvrir le lien de partage suivant (Google Drive): https://drive.google.com/drive/folders/12PKkp9vkuWPazhLHrwdEoBg3IDZ_T7Q_?usp=sharing
+1) Ouvrir le lien de partage suivant (Google Drive): https://drive.google.com/drive/folders/1j-XK2umdsMwAPsOgEgqt4rR56q6oBGSf?usp=sharing
 2) Le dossier contenant l'ensemble des données nécessaires aux TPs est maintenant partagé avec votre Drive. 
 3) Dans le menu de gauche de Google Drive, cliquez sur "Partagés avec moi", puis doit apparaître le dossier `TPDUIA`.
 4) Simple clique _droit_ sur le dossier `TPDUIA`, puis "Ajouter un raccourci dans Drive". 

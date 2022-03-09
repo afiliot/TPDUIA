@@ -1,5 +1,11 @@
 # coding: utf-8
 
+"""Ensemble des fonctions utilisées pour le TP n°1 sur la pathologie digitale
+dans le cadre du Diplôme Universitaire Intelligence Artificielle et Santé,
+Université de Lille 2022."""
+
+# crédits: Alexandre Filiot, Data Scientist @ CHU de Lille
+
 # librairies standard utilitaires
 import os
 import warnings
@@ -42,7 +48,7 @@ import tensorflow as tf
 warnings.filterwarnings('ignore')
 
 
-PATH = '/data/freganet/TPDUIA' #'/content/gdrive/MyDrive/TPDUIA'
+PATH = '/content/gdrive/MyDrive/TPDUIA' #'/data/freganet/TPDUIA'
 
 def launch_server(wsi_path):
     print("""
@@ -286,20 +292,25 @@ def create_dzg(
     target_shape: int,
     overlap: int,
     thresh: float,
-    scale_factor: float = 1/32
+    scale_factor: float = 1/32,
+    patch_precomputed: bool = True
 ) -> DZG:
     """Créée un objet DZG avec des attributs supplémentaires utiles
     pour le traitement de la lame et des patches.
     
     Paramètres:
-        wsi          : la lame en format openslide.OpenSlide
-        wsi_path     : le chemin vers cette lame
-        tile_size    : la taille en micromètres des patches
-        target_shape : la taille en pixels des patches sauvegardés
-        overlap      : le pourcentage de superposition entre les patches
-        thresh       : le pourcentage maximal de fond blanc que peut contenir
-                       un patch
-        scale_factor : pourcentage de dezoom (défaut=1/32)
+        wsi               : la lame en format openslide.OpenSlide
+        wsi_path          : le chemin vers cette lame
+        tile_size         : la taille en micromètres des patches
+        target_shape      : la taille en pixels des patches sauvegardés
+        overlap           : le pourcentage de superposition entre les patches
+        thresh            : le pourcentage maximal de fond blanc que peut contenir
+                            un patch
+        scale_factor      : pourcentage de dezoom (défaut=1/32)
+        patch_precomputed : si les patches ont déjà été créés, il s'agit du dossier
+                            PATCHES_BACKUP (patch_precomputed=True).
+                            Sinon (False), les patches seront créés dans le
+                            dossier PATCHES pour ne pas écraser les données!
                        
     Return:
         dz : l'objet DeepZoomGenerator avec des attributs supplémentaires
@@ -354,7 +365,14 @@ def create_dzg(
     # ainsi que l'identifiant du patient
     dz.patient_id = os.path.split(wsi_path)[0][-4:]
     # on spécifie le dossier où seront stockées les patches
-    dz.output_folder = f'{PATH}/PATCHES/{dz.patient_id}_taille-{tile_size}/'
+    # si les patches ont déjà été créés, il s'agit du dossier
+    # PATCHES_BACKUP
+    # sinon, les patches seront créés dans le dossier PATCHES
+    # pour ne pas écraser les données!
+    if not patch_precomputed:
+        dz.output_folder = f'{PATH}/PATCHES/{dz.patient_id}_taille-{tile_size}/'
+    else:
+        dz.output_folder = f'{PATH}/PATCHES_BACKUP/{dz.patient_id}_taille-{tile_size}/'
     # on créée ce dossier s'il n'existait pas encore
     os.makedirs(dz.output_folder, exist_ok=True)
     # on ajoute le niveau de dézoom par niveau de résolution
@@ -576,7 +594,6 @@ def plot_patch_mask(dz: DZG, figsize: Tuple[int, int] = (20, 10)) -> None:
     # de l'image finale
     dwn_w = wsi.level_dimensions[0][0] / thumb_w
     dwn_h = wsi.level_dimensions[0][1] / thumb_h
-    print(dwn_h, dwn_h)
     # on initialise l'image où se superposeront les patches,
     # avec les mêmes dimensions que l'image d'origine
     img = Image.new('1', (thumb_h, thumb_w), 0)
