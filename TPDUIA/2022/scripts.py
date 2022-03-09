@@ -809,8 +809,8 @@ def get_predictions_table(
     """Retourne un data frame pandas avec, pour chaque image: les probabilités associées
     aux classes prédites, la classe prédite (maximum des probabilités) et le chemin vers
     l'image."""
-    predicted_probas = model.predict_proba(images, verbose=1)
-    predicted_classes = model.predict_classes(images, verbose=1)
+    predicted_probas = model.predict(images, verbose=1)
+    predicted_classes = predicted_probas.argmax(axis=1)
     # on construit une table avec les probabilités et les classes prédites
     # par l'algorithme sur l'échantillon de test
     predictions = pd.DataFrame(predicted_probas, predicted_classes)
@@ -882,7 +882,7 @@ def create_segmentation_mask(
     format. Créée également l'image sous-dimensionnée en (1000, 1000)
     image_r et le masque également sous-dimensionné mask_r."""
     image = image_large[:4950, :4950]
-    predictions = model.predict_classes(patches, verbose=1).reshape((33, 33))
+    predictions = model.predict(patches, verbose=1).argmax(axis=1).reshape((33, 33))
     mask = np.zeros((4950, 4950)) * np.nan
     for i in range(33):
         for j in range(33):
