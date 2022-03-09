@@ -20,6 +20,7 @@ from scipy.ndimage import binary_closing, binary_fill_holes, binary_opening
 from skimage.filters import threshold_multiotsu
 from skimage.transform import resize
 from skimage.color import rgb2hed, hed2rgb
+from skimage.util import view_as_blocks
 
 # librairies de visualisation des images
 import matplotlib
@@ -39,6 +40,9 @@ from tqdm import tqdm
 import tensorflow as tf
 
 warnings.filterwarnings('ignore')
+
+
+PATH = '/data/freganet/TPDUIA' #'/content/gdrive/MyDrive/TPDUIA'
 
 def launch_server(wsi_path):
     print("""
@@ -350,7 +354,7 @@ def create_dzg(
     # ainsi que l'identifiant du patient
     dz.patient_id = os.path.split(wsi_path)[0][-4:]
     # on spécifie le dossier où seront stockées les patches
-    dz.output_folder = f'/data/freganet/TPDU/{dz.patient_id}_taille-{tile_size}/'
+    dz.output_folder = f'{PATH}/PATCHES/{dz.patient_id}_taille-{tile_size}/'
     # on créée ce dossier s'il n'existait pas encore
     os.makedirs(dz.output_folder, exist_ok=True)
     # on ajoute le niveau de dézoom par niveau de résolution
@@ -818,3 +822,99 @@ def get_accuracies(matrix: pd.DataFrame) -> None:
         true  = col[true_class]
         false = col[[t for t in range(0, 8) if t != true_class]].sum()
         print(f'Class {classes_dict[true_class]}: {(100*true/(true+false)):.1f}%')
+        
+from PIL import Image
+
+def patchify(images_large: Dict[str, np.ndarray], filenames_large: np.ndarray) -> None:
+    """Partitionne chacune des images grand format de taille (5000, 5000)
+    en 33 x 33 patches de taille (150, 150)."""
+    for filename_large in tqdm(filenames_large):
+        # 150 est un multiple de 4950 contrairement à 5000
+        # si l'on garde l'image en dimension (5000, 5000),
+        # view_as_blocks de skimage.util ne fonctionne pas
+        image = images_large[filename_large][:4950, :4950]
+        # on segmente en patch de taille (150, 150)
+        patches = view_as_blocks(
+            image,
+            block_shape=(150, 150, 3)
+        )[:, :, 0, :, :, :]
+        # on rescale l'image en divisant par 255.
+        patches = patches.reshape(33*33, 150, 150, 3) * (1./255)
+        # on standardise les patches (centrage-réduction)
+        patches = tf.image.per_image_standardization(patches).numpy()
+        # on créée le dossier correspondant (au cas où)
+        os.makedirs(f'{PATH}/colorectal_histology_large/2.0.0b/{filename_large}/', exist_ok=True)
+        _ = np.save(f'{PATH}/colorectal_histology_large/2.0.0b/{filename_large}/patches.npy', patches)
+
+def get_patches(filenames_large: np.ndarray) -> Dict[str, np.ndarray]:
+    """Retourne un dictionnaire {nom de l'image: patches}."""
+    patches = {}
+    for filename_large in tqdm(filenames_large):
+        patches[filename_large] = np.load(
+            f'{PATH}/colorectal_histology_large/2.0.0b/{filename_large}/patches.npy'
+        )
+    return patches
+
+def create_segmentation_mask(
+    model: tf.keras.models.Model,
+    image_large: np.ndarray,
+    patches: np.ndarray
+) -> List[np.ndarray]:
+    """Créée un masque de segmentation à partir des prédictions
+    du modèle évaluées sur les patches d'entrée d'une image grand
+    format. Créée également l'image sous-dimensionnée en (1000, 1000)
+    image_r et le masque également sous-dimensionné mask_r."""
+    image = image_large[:4950, :4950]
+    predictions = model.predict_classes(patches, verbose=1).reshape((33, 33))
+    mask = np.zeros((4950, 4950)) * np.nan
+    for i in range(33):
+        for j in range(33):
+            mask[(i*150):((i+1)*150), (j*150):((j+1)*150)] = predictions[i, j]
+    mask_r = resize(mask, (1000, 1000))
+    image_r = np.array(
+        Image.fromarray(image).resize((1000, 1000))
+    )
+    return mask, mask_r, image_r
+
+def plot_heatmap(
+    image_reduced: np.ndarray,
+    mask_reduced: np.ndarray,
+    figsize: Tuple[int, int] = (20, 10)
+) -> None:
+    """Affiche l'image brute avec la carte de segmentation."""
+    fig, axes = plt.subplots(1, 2, figsize=figsize)
+    # affichage de l'image brute
+    ax = axes[0]
+    ax.imshow(image_reduced);ax.axis('off')
+    ax.set_title("Image d'origine")
+    # affichage du masque de segmentation à 8 classes
+    # d'abord on affiche l'image
+    ax = axes[1]
+    ax.imshow(image_reduced);ax.axis('off')
+    # puis le masque
+    # on définit pour cela une échelle de couleurs à 8 couleurs
+    cmap = matplotlib.cm.get_cmap('Accent', 8)
+    # on superpose le masque
+    ax.imshow(mask_reduced, cmap=cmap, alpha=0.8)
+    ax.set_title(f'Distribution spatiale des classes de tissus prédites')
+    # et on définit l'échelle de couleur qui viendra
+    # s'afficher à droite du graphique
+    # cette étape est technique puisqu'elle nécessite
+    # de configurer correctement l'objet "colorbar"
+    norm = matplotlib.colors.Normalize(vmin=0, vmax=8)
+    cbar_ax = fig.add_axes([1.00, 0.155, 0.02, 0.8])
+    cbar = fig.colorbar(
+        matplotlib.cm.ScalarMappable(norm=norm, cmap=cmap),
+        ax=ax,
+        cax=cbar_ax,
+        label='Classe',
+        aspect=20
+    )
+    cbar.set_ticks(np.linspace(0, 7, 8)+0.5)
+    tick_labels = list(classes_dict.values())
+    tick_texts = cbar.ax.set_yticklabels(tick_labels)
+    tick_texts[0].set_verticalalignment('top')
+    tick_texts[-1].set_verticalalignment('bottom')
+    # on affiche
+    plt.tight_layout()
+    plt.show()
