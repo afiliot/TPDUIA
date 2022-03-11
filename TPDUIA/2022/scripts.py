@@ -4,11 +4,13 @@
 dans le cadre du Diplôme Universitaire Intelligence Artificielle et Santé,
 Université de Lille 2022."""
 
-# crédits: Alexandre Filiot, Data Scientist @ CHU de Lille
+# Copyright: Alexandre Filiot, Data Scientist @ CHU de Lille
 
 # librairies standard utilitaires
 import os
 import warnings
+warnings.filterwarnings('ignore', module = "matplotlib\..*") # cible matplotlib en particulier
+
 import itertools
 from pprint import pprint
 from copy import copy
@@ -44,8 +46,6 @@ from tqdm import tqdm
 
 # deep learning
 import tensorflow as tf
-
-warnings.filterwarnings('ignore')
 
 
 PATH = '/content/gdrive/MyDrive/TPDUIA' #'/data/freganet/TPDUIA'
