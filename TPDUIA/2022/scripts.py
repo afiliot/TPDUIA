@@ -8,9 +8,6 @@ Université de Lille 2022."""
 
 # librairies standard utilitaires
 import os
-import warnings
-warnings.filterwarnings('ignore', module = "matplotlib\..*") # cible matplotlib en particulier
-
 import itertools
 from pprint import pprint
 from copy import copy

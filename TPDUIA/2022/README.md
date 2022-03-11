@@ -25,6 +25,7 @@ Vous pouvez reprendre l'intégralité des notebooks présentés durant les sessi
   - 3.1) Cliquez sur GitHub, puis comme demandé saisissez l'URL de ce GitHub: https://github.com/afiliot/TPDUIA/2022/. Normalement, vous verrez une liste déroulante (en bas de l'écran) des 3 différents TPs cités plus haut. Sélectionnez celui qui vous intéresse. _Vous pouvez ignorer les demandes d'autorisation et autres pop-up_.
   - 3.2) Allez dans `Fichier` puis cliquez sur "importer le notebook". Vous allez alors faire appraître la fenêtre mentionnée en point 2.1. Suivez alors la procédure en 3.1.
  4) Le notebook s'affiche désormais sur votre écran. Allez alors dans `Modifier`, puis "Paramètres du notebook", et enfin sélectionnez le menu déroulant "Accélérateur matériel" puis cliquez sur "GPU".
+ 5) Cliquer dans le menu sur `Affichage` puis `Dérouler les rubriques`.
  
 C'est bon pour cette étape ! :+1:
 
